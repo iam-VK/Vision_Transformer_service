@@ -1,0 +1,8 @@
+__pycache__/
+venv/
+key_frames/
+Models/
+uploads/
+keyframes_classified.json
+
+*.zip
