@@ -1,3 +1,3 @@
 #!/bin/bash
 source venv/Scripts/activate
-python API.py
+python API_SERVER.py

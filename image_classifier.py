@@ -16,5 +16,6 @@ def img_classification_model(img_dir:str="key_frames"):
         logits = outputs.logits
         predicted_class_idx = logits.argmax(-1).item()
         model_prediction.append(model.config.id2label[predicted_class_idx])
+        
     json_parser(model_prediction,output_file_name="keyframes_classified")
     print("Parsed data into JSON file")
