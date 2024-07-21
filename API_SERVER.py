@@ -10,14 +10,15 @@ CORS(app)
 def index():
     # check the metadata if the file details and check if the file has been recieved
     if request.method == 'POST':   
-        keyframes_dir = request.form['keyframes_dir'] 
+        keyframes_dir = request.form['dir'] 
+        vid_file_name = request.form['vid_name']
         file = request.files['file_upload'] 
         if file:
             prepare_output_dir('uploads')
             file_path = f"uploads/{file.filename}"
             file.save(file_path)
 
-        index_keyframes(file_path,keyframes_dir)
+        index_keyframes(file_path,keyframes_dir,vid_file_name)
         return {"Acknowledgement":"File recieved"}
 
 
