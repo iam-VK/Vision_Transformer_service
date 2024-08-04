@@ -138,8 +138,8 @@ def sort_video_categories_table():
 
         print(f"$$ Table (video_categories) updated with category_frequency and sorted")
 
-        dbcursor.execute(create_view)
-        db.commit()
+        # dbcursor.execute(create_view)
+        # db.commit()
 
     except mysql.connector.Error as error:
         if error.errno == 1050:
