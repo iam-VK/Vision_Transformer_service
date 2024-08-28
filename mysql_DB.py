@@ -160,7 +160,7 @@ def insert_video_categories(json_file):
      
         for i in range(0,len(indexed_data["keyframes_classified"])):
             video_id = video_To_video_id(indexed_data["src_file"])
-            category_name = f"{indexed_data["keyframes_classified"][f'{i}']["category"]}".strip("[]").replace("'","")
+            category_name = indexed_data["keyframes_classified"][f'{i}']["category"].strip("[]").replace("'","")
             category_id = category_To_category_id(category_name)
             query = f"INSERT INTO video_categories (video_id, category_id) VALUES ('{video_id}','{category_id}');"
             dbcursor.execute(query)
