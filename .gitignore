@@ -3,6 +3,7 @@ venv/
 key_frames/
 Models/
 uploads/
+audios/
 keyframes_classified.json
 
 *.zip

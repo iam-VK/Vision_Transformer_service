@@ -3,6 +3,25 @@ import re
 import json
 import os
 from zipfile import ZipFile 
+from moviepy.editor import VideoFileClip
+
+def file_name_extract(file_path):
+    file_name = os.path.basename(file_path)
+    file_name_without_extension, _ = os.path.splitext(file_name)
+
+    return file_name, file_name_without_extension
+
+def extract_audio(filename):
+    _, file_name_without_ext = file_name_extract(filename)
+    
+    video_clip = VideoFileClip(f"./uploads/{filename}")
+    prepare_output_dir('audios')
+    audio_path = f"./audios/{file_name_without_ext}.wav"
+    video_clip.audio.write_audiofile(audio_path, codec="pcm_s16le")
+
+    video_clip.close()
+    return {"file_name": filename,
+            "audio_file":audio_path}
 
 def vidName_from_path(vid_dir_path:str="Videos"):
     '''Extract only video name from the dir of videos

@@ -19,7 +19,7 @@ RUN mkdir /app/Models/vit-base-patch16-224/
 COPY Models/vit-base-patch16-224/ /app/Models/vit-base-patch16-224/
 
 RUN apt-get update
-RUN apt-get install -y default-mysql-client
+# RUN apt-get install -y default-mysql-client
 # RUN mysql -ugroot -piamgroot -P 3306 -h db < DB_Dump.sql
 
 RUN pip install -r /app/requirements.txt
