@@ -20,7 +20,8 @@ def extract_audio(filename):
     video_clip.audio.write_audiofile(audio_path, codec="pcm_s16le")
 
     video_clip.close()
-    return {"file_name": filename,
+    return {"audio_extract":"completed",
+            "file_name": filename,
             "audio_file":audio_path}
 
 def vidName_from_path(vid_dir_path:str="Videos"):

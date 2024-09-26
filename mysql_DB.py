@@ -70,7 +70,7 @@ def insert_videos(vid_dir:str="Shorts_Videos"):
 def category_To_category_id(category_name:str):
     try:
         dbcursor = db.cursor()
-        query = f"SELECT category_id from categories where category_name = '{category_name}'"
+        query = f'''SELECT category_id from categories where category_name = "{category_name}"'''
         dbcursor.execute(query)
         category_id = dbcursor.fetchone()
 
@@ -160,14 +160,21 @@ def insert_video_categories(json_file):
      
         for i in range(0,len(indexed_data["keyframes_classified"])):
             video_id = video_To_video_id(indexed_data["src_file"])
-            category_name = str(indexed_data["keyframes_classified"][f'{i}']["category"]).strip("[]").replace("'","")
+            category_name = ""
+
+            category_list = indexed_data["keyframes_classified"][f'{i}']["category"]
+            for j in range(len(category_list)): 
+                category_name += category_list[j]
+                if j+1 < len(category_list):
+                    category_name+=", "
+
             category_id = category_To_category_id(category_name)
             query = f"INSERT INTO video_categories (video_id, category_id) VALUES ('{video_id}','{category_id}');"
             dbcursor.execute(query)
 
             query = f"UPDATE videos SET index_state = 1 WHERE video_id = {video_id};"
             dbcursor.execute(query)
-            print(f"$$ New video {indexed_data["src_file"]} indexed")
+        print(f"$$ New video {indexed_data["src_file"]} indexed")
         sort_video_categories_table()
         db.commit()
 

@@ -1,9 +1,8 @@
 from flask import Flask, request
 from flask_cors import CORS
-from MY_modules import prepare_output_dir, extract_audio
-from main import index_keyframes
-from ASR_model import speech_recog
-# 908756
+from MY_modules import prepare_output_dir
+from main import index_keyframes, asr
+
 app = Flask(__name__)
 CORS(app)
 
@@ -16,7 +15,16 @@ def service_status():
                     "method": "POST",
                     "parameters": {
                         "form_data": ["dir", "vid_name"],
-                        "file_upload": "video file"
+                        "file_upload": "video file",
+                        "mode":"standalone, default chained"
+                    }
+                },
+                "/speech-recog": {
+                    "method": "POST",
+                    "parameters": {
+                        "form_data": ["dir", "vid_name"],
+                        "file_upload": "video file",
+                        "mode":"standalone, default chained"
                     }
                 }
             }
@@ -33,11 +41,13 @@ def index():
 
         if file:
             prepare_output_dir('uploads')
-            file_path = f"uploads/{file.filename}"
+            filename = file.filename
+            file_path = f"uploads/{filename}"
             file.save(file_path)
 
-        response = index_keyframes(file_path,keyframes_dir,vid_file_name, mode)
-        return {"Acknowledgement":"File recieved","Result":response}
+        resp_vision = index_keyframes(file_path,keyframes_dir,vid_file_name, mode)
+        return {"Acknowledgement":"File recieved",
+                "ViT-Result":resp_vision}
 
 @app.route("/speech-recog", methods=['POST'])
 def speech_model():
@@ -51,17 +61,10 @@ def speech_model():
             filename = file.filename
             file_path = f"uploads/{filename}"
             file.save(file_path)
-
-            return_message = extract_audio(filename)
-            print(return_message)
-
-            transcript = speech_recog(filename)
-
-            if mode == "standalone":
-                return {"filename":filename,
-                        "transcript":transcript}
-            
-
+            resp = asr(filename, mode)
+            return resp
+        else:
+            return {"Error":"No file Recieved"}
         # //response = index_keyframes(file_path,vid_file_name, mode)
         # //return {"Acknowledgement":"File recieved","Result":response}
 

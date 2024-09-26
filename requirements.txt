@@ -6,6 +6,8 @@ charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
 decorator==4.4.2
+elastic-transport==8.15.0
+elasticsearch==8.15.1
 filelock==3.14.0
 Flask==3.0.3
 Flask-Cors==4.0.1
