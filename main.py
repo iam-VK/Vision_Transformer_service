@@ -2,9 +2,6 @@ from MY_modules import unzip, prepare_output_dir
 from image_classifier import img_classification_model
 from api_requests import multipart_post
 from mysql_DB import insert_video_categories
-from MY_modules import extract_audio
-from elastic import insert_into_elastic
-from ASR_model import speech_recog
 import json
 
 def index_keyframes(keyframes_zipfile_path:str,keyframes_dir:str,vid_file_name:str, mode:str):
@@ -32,17 +29,3 @@ def index_keyframes(keyframes_zipfile_path:str,keyframes_dir:str,vid_file_name:s
     return {"status":"success",
             "service_name":"Vision_Transformer",
             "video_file":vid_file_name}#post_response}
-
-def asr(filename, mode="chained"):
-    audio_extract_resp = extract_audio(filename)
-    print(audio_extract_resp)
-
-    transcript = str(speech_recog(filename))
-
-    if mode == "standalone":
-        return {"filename":filename,
-                "transcript":transcript}
-            
-    if mode == "chained":
-        resp = insert_into_elastic(filename, transcript)
-        return {"elastic_response": str(resp)}
