@@ -32,7 +32,7 @@ def insert_imagenet_categories(json_file):
         if error.errno == 1062:
             pass
         else:
-            print("Error inserting ImageNet categories into categories table:", error)
+            print("$$$ Error: Mysql Exception at 'insert_imagenet_categories()' -> inserting ImageNet categories into categories table:", error)
 
     finally:
         dbcursor.close()
@@ -61,7 +61,7 @@ def insert_videos(vid_dir:str="Shorts_Videos"):
         print("------------INSERT INTO videos: Successful------------")
 
     except mysql.connector.Error as error:
-        print("Error inserting video data into videos table:", error)
+        print("$$$ Error: Mysql Exception at 'insert_videos()' -> inserting video data into videos table:", error)
 
     finally:
         dbcursor.close()
@@ -75,24 +75,24 @@ def category_To_category_id(category_name:str):
         category_id = dbcursor.fetchone()
 
     except mysql.connector.Error as error:
-        print("Error extracting category_id from categories table:", error)
+        print("$$$ Error: Mysql Exception at 'category_To_category_id()' -> extracting category_id from categories table:", error)
     finally:
         dbcursor.close()
         return category_id[0]
 
 
-def video_To_video_id(video_name:str):
+def video_To_file_id(video_name:str):
     try:
         dbcursor = db.cursor()
-        query = f"SELECT video_id from videos WHERE file_name='{video_name}'"
+        query = f"SELECT file_id from videos WHERE file_name='{video_name}'"
         dbcursor.execute(query)
-        video_id = dbcursor.fetchone()
+        file_id = dbcursor.fetchone()
         
     except mysql.connector.Error as error:
-        print("Error extracting video_id from videos table:", error)
+        print("$$$ Error: Mysql Exception at 'video_To_file_id()' -> extracting file_id from videos table:", error)
     finally:
         dbcursor.close()
-        return video_id[0]
+        return file_id[0]
 
 
 def check_indexed_state(video_name:str):
@@ -103,11 +103,11 @@ def check_indexed_state(video_name:str):
         index_state = dbcursor.fetchone()
 
     except mysql.connector.Error as error:
-        print("Error retriving index_state:", error)
+        print("$$$ Error: Mysql Exception at 'check_indexed_state()' -> retriving index_state:", error)
 
     finally:
         dbcursor.close()
-        return index_state[0]
+        return index_state[0] if index_state else "$$$$$$$$$$ Video or Index_State Not Found in DB"
 
 
 def sort_video_categories_table():
@@ -116,20 +116,20 @@ def sort_video_categories_table():
     try:
         count_frequency = '''UPDATE video_categories AS vc
                 INNER JOIN (
-                SELECT video_id, category_id, COUNT(*) AS frequency
+                SELECT file_id, category_id, COUNT(*) AS frequency
                 FROM video_categories
-                GROUP BY video_id, category_id
+                GROUP BY file_id, category_id
                 ) AS freq_table
-                ON vc.video_id = freq_table.video_id AND vc.category_id = freq_table.category_id
+                ON vc.file_id = freq_table.file_id AND vc.category_id = freq_table.category_id
                 SET vc.frequency = freq_table.frequency;'''
         sort_table = '''ALTER TABLE video_categories
-                    ORDER BY video_id, frequency DESC;'''
+                    ORDER BY file_id, frequency DESC;'''
         create_view = '''CREATE VIEW video_index AS
-                SELECT videos.video_id, videos.file_name, videos.file_path, categories.category_id ,categories.category_name, COUNT(*) AS frequency
+                SELECT videos.file_id, videos.file_name, videos.file_path, categories.category_id ,categories.category_name, COUNT(*) AS frequency
                 FROM videos
-                LEFT JOIN video_categories ON videos.video_id = video_categories.video_id
+                LEFT JOIN video_categories ON videos.file_id = video_categories.file_id
                 LEFT JOIN categories ON video_categories.category_id = categories.category_id
-                GROUP BY videos.video_id, videos.file_name, categories.category_name, categories.category_id;'''
+                GROUP BY videos.file_id, videos.file_name, categories.category_name, categories.category_id;'''
         
         
         dbcursor.execute(count_frequency)
@@ -145,7 +145,7 @@ def sort_video_categories_table():
         if error.errno == 1050:
             pass
         else:
-            print("Error counting frequency and sorting videos table:", error)
+            print("$$$ Error: Mysql Exception at 'sort_video_categories_table()' -> counting frequency and sorting videos table:", error)
 
     finally:
         dbcursor.close()
@@ -159,7 +159,7 @@ def insert_video_categories(json_file):
             indexed_data = json.load(file)
      
         for i in range(0,len(indexed_data["keyframes_classified"])):
-            video_id = video_To_video_id(indexed_data["src_file"])
+            file_id = video_To_file_id(indexed_data["src_file"])
             category_name = ""
 
             category_list = indexed_data["keyframes_classified"][f'{i}']["category"]
@@ -169,20 +169,26 @@ def insert_video_categories(json_file):
                     category_name+=", "
 
             category_id = category_To_category_id(category_name)
-            query = f"INSERT INTO video_categories (video_id, category_id) VALUES ('{video_id}','{category_id}');"
+            query = f"INSERT INTO video_categories (file_id, category_id) VALUES ('{file_id}','{category_id}');"
             dbcursor.execute(query)
 
-            query = f"UPDATE videos SET index_state = 1 WHERE video_id = {video_id};"
+            query = f"SELECT index_state from videos WHERE file_id={file_id}"
             dbcursor.execute(query)
-        print(f"$$ New video {indexed_data["src_file"]} indexed")
-        sort_video_categories_table()
-        db.commit()
+            previous_index_state = dbcursor.fetchone()
+
+            index_state = 'vsn-sph' if previous_index_state == 'speech' else 'vision'
+
+            query = f"UPDATE videos SET index_state = '{index_state}' WHERE file_id = {file_id};"
+            dbcursor.execute(query)
 
     except mysql.connector.Error as error:
-        print("Error inserting data into MySQL table:", error)
+        print("$$$ Error: Mysql Exception at 'insert_video_categories()' -> inserting indexed-data into MySQL table:", error)
 
     finally:
+        sort_video_categories_table()
+        db.commit()
         dbcursor.close()
+        print(f"$$ New video {indexed_data["src_file"]} indexed")
 
 
 def search_video(search_tag:str):
@@ -207,7 +213,9 @@ def search_video(search_tag:str):
             print("$$ No match Found")
 
     except mysql.connector.Error as error:
-        print("Error Searching video from Video_Index:", error)
+        print("$$$ Error: Mysql Exception at 'search_video()' -> Searching video from Video_Index:", error)
+    finally:
+        dbcursor.close()
 
 
 # insert_imagenet_categories("ImageNet_classes.json")

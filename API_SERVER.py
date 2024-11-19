@@ -16,20 +16,20 @@ def service_status():
                     "parameters": {
                         "form_data": ["dir", "vid_name"],
                         "file_upload": "video file",
-                        "mode":"standalone, default chained"
+                        "mode":"standalone, default db"
                     }
                 }
             }
         }
 
-@app.route("/index", methods=['POST'])
+@app.route("/video-index", methods=['POST'])
 def index():
-    # check the metadata for file details and check if the file has been recieved
+    # TODO: check the metadata for file details and check if the file has been recieved
     if request.method == 'POST':
         keyframes_dir = request.form['dir'] 
         vid_file_name = request.form['vid_name']
-        file = request.files['file_upload'] 
-        mode = request.form.get('mode',"chained") # other mode:standalone, default mode:chained
+        file = request.files['file_upload']
+        mode = request.form.get('mode',"chained") # other mode:standalone, default mode:db
 
         if file:
             prepare_output_dir('uploads')
